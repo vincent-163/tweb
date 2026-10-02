@@ -11,6 +11,7 @@ import Modes from '@config/modes';
 import bytesFromHex from '@helpers/bytes/bytesFromHex';
 import bytesToHex from '@helpers/bytes/bytesToHex';
 import bigInt from 'big-integer';
+import {getPrivateServerConfig, parsePublicPemHex} from '@lib/privateServer';
 
 export type RSAPublicKeyHex = {
   modulus: string,
@@ -78,9 +79,13 @@ export class RSAKeysManager {
   } = {};
   private prepared = false;
   private preparePromise: Promise<void> = null;
+  private privatePublicKey = getPrivateServerConfig();
 
   constructor() {
-    if(Modes.test) {
+    if(this.privatePublicKey) {
+      const parsed = parsePublicPemHex(this.privatePublicKey.publicKey);
+      this.publisKeysHex = [parsed];
+    } else if(Modes.test) {
       this.publisKeysHex = this.testPublicKeysHex;
     }
   }

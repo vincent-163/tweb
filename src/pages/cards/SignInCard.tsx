@@ -264,6 +264,12 @@ export default function SignInCard(_props: {spec: Spec}) {
         text="Login.QR.Login"
       />
       <PasskeyLoginButton disabled={submitting()} />
+      <Button
+        class="btn-primary btn-secondary btn-primary-transparent primary"
+        disabled={submitting()}
+        onClick={() => navigate({name: 'privateServer'})}
+        text="Login.PrivateServer"
+      />
     </AuthCard>
   );
 }

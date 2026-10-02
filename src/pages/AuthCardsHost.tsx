@@ -43,6 +43,7 @@ const SignUpCard = lazy(() => import('@/pages/cards/SignUpCard'));
 const EmailRecoverCard = lazy(() => import('@/pages/cards/EmailRecoverCard'));
 const SignQRCard = lazy(() => import('@/pages/cards/SignQRCard'));
 const SignImportCard = lazy(() => import('@/pages/cards/SignImportCard'));
+const PrivateServerCard = lazy(() => import('@/pages/cards/PrivateServerCard'));
 
 /* ------------------------------------------------------------------ */
 /* Host                                                               */
@@ -224,6 +225,9 @@ function CardsTransition(): JSX.Element {
       </Match>
       <Match when={matchCard('signImport')} keyed>
         {(spec) => <SignImportCard spec={spec} />}
+      </Match>
+      <Match when={matchCard('privateServer')} keyed>
+        {(spec) => <PrivateServerCard spec={spec} />}
       </Match>
     </Switch>
   ));

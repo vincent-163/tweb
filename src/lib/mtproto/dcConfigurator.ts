@@ -16,6 +16,7 @@ import {IS_WEB_WORKER} from '@helpers/context';
 import {DcId} from '@types';
 import {getEnvironment} from '@environment/utils';
 import SocketProxied from '@lib/mtproto/transports/socketProxied';
+import {getPrivateServerConfig, privateServerHttpUrl} from '@lib/privateServer';
 
 export type TransportType = 'websocket' | 'https' | 'http';
 export type ConnectionType = 'client' | 'download' | 'upload';
@@ -50,7 +51,7 @@ export function assertValidDcId(dcId: DcId): DcId {
 }
 
 export function constructTelegramWebSocketUrl(_dcId: DcId, connectionType: ConnectionType, premium?: boolean) {
-  if(!import.meta.env.VITE_MTPROTO_HAS_WS) {
+  if(!import.meta.env.VITE_MTPROTO_HAS_WS || getPrivateServerConfig()) {
     return;
   }
 
@@ -106,8 +107,11 @@ export class DcConfigurator {
       return;
     }
 
+    const privateServer = getPrivateServerConfig();
     let chosenServer: string;
-    if(Modes.ssl || !Modes.http) {
+    if(privateServer) {
+      chosenServer = privateServerHttpUrl(privateServer);
+    } else if(Modes.ssl || !Modes.http) {
       const suffix = getTelegramConnectionSuffix(connectionType);
       const subdomain = this.sslSubdomains[dcId - 1] + suffix;
       const path = Modes.test ? 'apiw_test1' : 'apiw1';
@@ -159,6 +163,9 @@ export class DcConfigurator {
 
       if(import.meta.env.VITE_MTPROTO_HAS_WS && import.meta.env.VITE_MTPROTO_HAS_HTTP) {
         transport = (transportType === 'websocket' ? this.transportSocket : this.transportHTTP)(dcId, connectionType, premium);
+        if(transportType === 'websocket' && getPrivateServerConfig()) {
+          transport = this.transportHTTP(dcId, connectionType, premium);
+        }
       } else if(!import.meta.env.VITE_MTPROTO_HTTP) {
         transport = this.transportSocket(dcId, connectionType, premium);
       } else {

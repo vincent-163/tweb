@@ -364,3 +364,57 @@ $corner-button-size: 2.5rem;
   opacity: 0;
   transform: translateX(-24px);
 }
+
+.private-server-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: min(520px, 100%);
+  margin-inline: auto;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: var(--secondary-text-color);
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  input,
+  textarea {
+    box-sizing: border-box;
+    width: 100%;
+    border: 1px solid var(--divider-color);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text-color);
+    background: var(--surface-background-color);
+    font: inherit;
+
+    &:focus {
+      border-color: var(--primary-color);
+      outline: none;
+    }
+  }
+
+  textarea {
+    min-height: 180px;
+    resize: vertical;
+    font-family: monospace;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .private-server-secure {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.private-server-error {
+  color: var(--danger-color);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}

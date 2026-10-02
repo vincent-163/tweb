@@ -246,6 +246,11 @@ export default function SignQRCard(_props: {spec: Spec}) {
       />
       {getCurrentAccount() === 1 && <LanguageChangeButton />}
       <PasskeyLoginButton />
+      <Button
+        class="btn-primary btn-secondary btn-primary-transparent primary"
+        onClick={() => navigate({name: 'privateServer'})}
+        text="Login.PrivateServer"
+      />
     </AuthCard>
   );
 }
