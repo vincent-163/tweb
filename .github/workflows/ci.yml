@@ -36,12 +36,16 @@ jobs:
         run: pnpm build
 
       - name: Package.
+        id: package
         run: |
           set -euo pipefail
           mkdir -p artifacts
-          asset="tweb-${GITHUB_SHA::8}.tar.gz"
+          version="$(sed -n 's/^VITE_VERSION=//p' .env | head -n 1)"
+          test -n "$version"
+          asset="tweb-${version}-${GITHUB_SHA::8}.tar.gz"
           tar -czf "artifacts/$asset" -C dist .
           (cd artifacts && sha256sum ./*.tar.gz > SHA256SUMS.txt)
+          echo "client_version=$version" >> "$GITHUB_OUTPUT"
           ls -lh artifacts
 
       - name: Upload artifact.
@@ -56,15 +60,16 @@ jobs:
         if: github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
         env:
           GH_TOKEN: ${{ github.token }}
+          CLIENT_VERSION: ${{ steps.package.outputs.client_version }}
         run: |
           set -euo pipefail
-          tag="build-${GITHUB_SHA::8}"
+          tag="tweb-${CLIENT_VERSION}-${GITHUB_SHA::8}"
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release upload "$tag" artifacts/* --clobber
           else
             gh release create "$tag" artifacts/* \
               --target "$GITHUB_SHA" \
-              --title "tweb build ${GITHUB_SHA::8}" \
-              --notes "Automated build of ${GITHUB_SHA}." \
+              --title "Telegram Web ${CLIENT_VERSION} (build ${GITHUB_SHA::8})" \
+              --notes "Official client version ${CLIENT_VERSION}; automated build of ${GITHUB_SHA}." \
               --latest
           fi
