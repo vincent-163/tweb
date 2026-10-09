@@ -6,6 +6,7 @@ import type {TrueDcId} from '@types';
 import sessionStorage from '@lib/sessionStorage';
 import DeferredIsUsingPasscode from '@lib/passcode/deferredIsUsingPasscode';
 import StaticUtilityClass from '@lib/staticUtilityClass';
+import {getPrivateServerConfig, privateServerAccountKey} from '@lib/privateServer';
 
 import {AccountSessionData, ActiveAccountNumber} from '@lib/accounts/types';
 import {MAX_ACCOUNTS} from '@lib/accounts/constants';
@@ -13,6 +14,11 @@ import bytesToHex from '@helpers/bytes/bytesToHex';
 import randomize from '@helpers/array/randomize';
 
 export class AccountController extends StaticUtilityClass {
+  static getAccountStorageKey(accountNumber: ActiveAccountNumber): `account${ActiveAccountNumber}` {
+    const privateServer = getPrivateServerConfig();
+    return (privateServer ? privateServerAccountKey(privateServer, accountNumber) : `account${accountNumber}`) as `account${ActiveAccountNumber}`;
+  }
+
   static async getTotalAccounts() {
     const promises = ([1, 2, 3, 4] as const).map((accountNumber) => this.get(accountNumber));
     const allAccountsData = await Promise.all(promises);
@@ -30,7 +36,7 @@ export class AccountController extends StaticUtilityClass {
   }
 
   static async get(accountNumber: ActiveAccountNumber, updating?: boolean) {
-    const data = await sessionStorage.get(`account${accountNumber}`) || {} as AccountSessionData;
+    const data = await sessionStorage.get(this.getAccountStorageKey(accountNumber)) || {} as AccountSessionData;
 
     if(!updating && this.fillMissingData(data)) {
       await this.update(accountNumber, data);
@@ -80,7 +86,7 @@ export class AccountController extends StaticUtilityClass {
     this.fillMissingData(updatedData);
 
     await sessionStorage.set({
-      [`account${accountNumber}`]: updatedData
+      [this.getAccountStorageKey(accountNumber)]: updatedData
     });
 
     if(accountNumber === 1) {
@@ -102,7 +108,7 @@ export class AccountController extends StaticUtilityClass {
    */
   static async shiftAccounts(upTo: ActiveAccountNumber) {
     for(let i = upTo; i <= MAX_ACCOUNTS; i++) {
-      await sessionStorage.delete(`account${i as ActiveAccountNumber}`);
+      await sessionStorage.delete(this.getAccountStorageKey(i as ActiveAccountNumber));
       if(i < MAX_ACCOUNTS) {
         const toMove = await this.get((i + 1) as ActiveAccountNumber);
         toMove.userId && (await this.update(i as ActiveAccountNumber, toMove, true));
@@ -115,6 +121,7 @@ export class AccountController extends StaticUtilityClass {
    */
   static async updateStorageForLegacy(accountData: Partial<AccountSessionData> | null) {
     if(accountData !== null && await DeferredIsUsingPasscode.isUsingPasscode()) return; // We can't expose keys if there's a passcode set
+    if(getPrivateServerConfig()) return;
 
     if(accountData === null) accountData = {};
 

@@ -1,17 +1,29 @@
 import {CURRENT_ACCOUNT_QUERY_PARAM} from '@lib/accounts/constants';
 import {THREADED_WORKER_PROTOCOL_QUERY_PARAM} from '@lib/threadedWorkerTypes';
+import {getPrivateServerConfig} from '@lib/privateServer';
 
 export function makeWorkerURL(url: string | URL) {
   if(!(url instanceof URL)) {
     url = new URL(url + '', location.href);
   }
 
-  if(location.search && url.protocol !== 'blob:') {
+  if(url.protocol !== 'blob:') {
     const params = new URLSearchParams(location.search);
     params.forEach((value, key) => {
       if(key === CURRENT_ACCOUNT_QUERY_PARAM || key === THREADED_WORKER_PROTOCOL_QUERY_PARAM) return;
       (url as URL).searchParams.set(key, value);
     });
+
+    const privateServer = getPrivateServerConfig();
+    if(privateServer) {
+      const privateParams = new URLSearchParams({
+        private_ip: privateServer.address,
+        private_port: privateServer.port + '',
+        private_public_key: privateServer.publicKey,
+        private_secure: privateServer.secure ? '1' : '0'
+      });
+      privateParams.forEach((value, key) => (url as URL).searchParams.set(key, value));
+    }
   }
 
   // exclude useless params

@@ -81,7 +81,7 @@ beforeAll(async() => {
   BubbleGroups = (await import('@components/chat/bubbleGroups')).default;
   // Importing the whole bubbles graph costs far more than the default hook
   // budget once the rest of the suite is competing for the same CPU.
-}, 60_000);
+}, 120_000);
 
 afterEach(() => {
   document.body.replaceChildren();

@@ -13,6 +13,7 @@ import {AccountSessionData, ActiveAccountNumber} from '@lib/accounts/types';
 import StateStorage from '@lib/stateStorage';
 import AccountController from '@lib/accounts/accountController';
 import commonStateStorage from '@lib/commonStateStorage';
+import {getPrivateServerConfig} from '@lib/privateServer';
 import {TrueDcId} from '@types';
 import {getOldDatabaseState} from '@config/databases/state';
 import {IDB} from '@lib/files/idb';
@@ -221,8 +222,15 @@ const STATE_STEPS = {
 
     return {newVersion, oldVersion};
   },
-  CHANGED_AUTH: async(writer: ReturnType<typeof StateWriter>) => {
-    const [authKeyFingerprint, baseDcAuthKey] = await Promise.all([
+  CHANGED_AUTH: async(
+    writer: ReturnType<typeof StateWriter>,
+    accountData?: Partial<AccountSessionData>
+  ) => {
+    const privateServer = getPrivateServerConfig();
+    const [authKeyFingerprint, baseDcAuthKey] = privateServer && accountData ? [
+      accountData.auth_key_fingerprint,
+      accountData[`dc${App.baseDcId}_auth_key`]
+    ] : await Promise.all([
       sessionStorage.get('auth_key_fingerprint'),
       sessionStorage.get(`dc${App.baseDcId}_auth_key`)
     ]);
@@ -236,6 +244,10 @@ const STATE_STEPS = {
       writer.reset(/* {preserveCommonKeys: ['settings']} */);
     } else if(authKeyFingerprint !== _authKeyFingerprint) {
       writer.reset();
+    }
+
+    if(privateServer) {
+      return;
     }
 
     if(authKeyFingerprint !== _authKeyFingerprint) {
@@ -279,7 +291,7 @@ async function loadStateForAccount(accountNumber: ActiveAccountNumber): Promise<
   }
 
   // await STATE_STEPS.STATE_ID(writer);
-  if(accountNumber === 1) await STATE_STEPS.CHANGED_AUTH(writer);
+  if(accountNumber === 1) await STATE_STEPS.CHANGED_AUTH(writer, accountData);
   STATE_STEPS.REFRESH(writer);
   STATE_STEPS.VALIDATE(writer, STATE_INIT);
   STATE_STEPS.VALIDATE(commonWriter, COMMON_STATE_INIT);
@@ -482,7 +494,9 @@ async function loadStateForAllAccounts() {
   }
 
   const perf = performance.now();
-  const hasMultiAccount = await checkIfHasMultiAccount() && !TEST_MULTI_MIGRATION;
+  const hasMultiAccount = (
+    getPrivateServerConfig() ? true : await checkIfHasMultiAccount()
+  ) && !TEST_MULTI_MIGRATION;
 
   // await pause(15000);
 

@@ -348,7 +348,10 @@ export default class CountryInputField extends InputField {
   }
 
   public selectCountryByIso2(iso2: string) {
-    this.selectCountryByTarget(this.liMap.get(iso2)[0]);
+    const target = this.liMap.get(iso2)?.[0];
+    if(target) {
+      this.selectCountryByTarget(target);
+    }
   }
 
   public override(country: HelpCountry, code: HelpCountryCode, countryName?: string) {

@@ -1,6 +1,7 @@
 import {describe, expect, it} from 'vitest';
 
 import {
+  privateServerAccountKey,
   parsePrivateServerConfig,
   parsePublicPemHex,
   privateServerHttpUrl
@@ -48,5 +49,23 @@ describe('private server configuration', () => {
       port: 28081,
       publicKey: 'not-a-key'
     })).toThrow();
+  });
+
+  it('keeps private-server account sessions separate from official storage', () => {
+    const config = parsePrivateServerConfig({
+      address: '192.168.37.27',
+      port: 28081,
+      publicKey: officialPublicKey
+    });
+    const otherConfig = parsePrivateServerConfig({
+      address: '192.168.37.28',
+      port: 28081,
+      publicKey: officialPublicKey
+    });
+
+    expect(privateServerAccountKey(config, 1)).not.toBe('account1');
+    expect(privateServerAccountKey(config, 1)).toBe(privateServerAccountKey(config, 1));
+    expect(privateServerAccountKey(config, 1)).not.toBe(privateServerAccountKey(config, 2));
+    expect(privateServerAccountKey(config, 1)).not.toBe(privateServerAccountKey(otherConfig, 1));
   });
 });

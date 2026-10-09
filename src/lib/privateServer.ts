@@ -288,3 +288,16 @@ export function privateServerHttpUrl(config: PrivateServerConfig): string {
   const host = config.address.includes(':') ? `[${config.address}]` : config.address;
   return `${config.secure ? 'https' : 'http'}://${host}:${config.port}/apiw1`;
 }
+
+export function privateServerAccountKey(config: PrivateServerConfig, accountNumber: number): string {
+  const identity = `${config.secure ? 'https' : 'http'}://${config.address}:${config.port}\n${config.publicKey}`;
+  let hash = 2166136261;
+  for(const character of identity) {
+    hash ^= character.codePointAt(0) || 0;
+    hash = Math.imul(hash, 16777619);
+  }
+
+  const address = config.address.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const digest = (hash >>> 0).toString(16).padStart(8, '0');
+  return `private-${address}-${config.port}-${digest}-account${accountNumber}`;
+}
