@@ -58,7 +58,9 @@ Source maps are included in production build for your convenience.
 * **private_ip=IP**, **private_port=PORT**, **private_public_key=PEM_BASE64**:
   connect the login flow to a standalone MTProto server instead of Telegram's
   public data centers. The public key may also be supplied as a PEM data URL.
-  The same values are available from `Login.PrivateServer` and persist locally.
+  For the bundled Rust server, use its HTTP/Bot API port (`28081` by default),
+  not the raw TCP MTProto port (`24443`). The same values are available from
+  `Login.PrivateServer` and persist locally.
 * **private_server=clear**: remove the persisted private server configuration.
 * **test=1**: to use test DCs
 * **debug=1**: to enable additional logging
